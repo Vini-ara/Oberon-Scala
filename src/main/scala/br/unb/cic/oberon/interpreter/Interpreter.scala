@@ -9,6 +9,7 @@ import br.unb.cic.oberon.visitor.OberonVisitorAdapter
 import scala.collection.mutable.ListBuffer
 import scala.io.StdIn
 import scala.language.{existentials, postfixOps}
+import scala.reflect.ClassTag
 
 /**
  * The interpreter visitor first updates the
@@ -73,7 +74,17 @@ def runInterpreter(module: OberonModule): Environment[Expression] = {
   }
 
   def declareProcedure(environment : Environment[Expression], procedure: Procedure): Environment[Expression] = {
-    environment.declareProcedure(procedure)
+    environment.setGlobalVariable(
+      procedure.name, 
+      new LambdaProcedure(
+        args = procedure.args, 
+        returnType = procedure.returnType, 
+        constants = procedure.constants, 
+        variables = procedure.variables, 
+        stmt = procedure.stmt
+      ))
+
+    // environment.declareProcedure(procedure)
   }
 
 
@@ -189,8 +200,7 @@ def runInterpreter(module: OberonModule): Environment[Expression] = {
     env1
   }
 
-
-  def updateEnvironmentWithProcedureCall(procedure: Procedure, args: List[Expression], environment : Environment[Expression]): Environment[Expression] = {
+  def updateEnvironmentWithProcedureCall(procedure: LambdaProcedure, args: List[Expression], environment : Environment[Expression]): Environment[Expression] = {
     val mappedArgs = procedure.args.zip(args).map(pair => pair match {
       case (ParameterByReference(_, _), VarExpression(name2)) => (pair._1, environment.pointsTo(name2).get)
       case (ParameterByReference(_, _), _) => throw new RuntimeException

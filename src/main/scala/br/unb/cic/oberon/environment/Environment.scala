@@ -1,6 +1,6 @@
 package br.unb.cic.oberon.environment
 
-import br.unb.cic.oberon.ir.ast.{Expression, Location, Procedure, ReferenceToUserDefinedType, Statement, Type, UserDefinedType}
+import br.unb.cic.oberon.ir.ast.{Expression, Location, Procedure, ReferenceToUserDefinedType, Statement, Type, UserDefinedType, LambdaProcedure}
 import org.jline.builtins.Completers.CompletionEnvironment
 
 import scala.collection.mutable.{Map, Stack}
@@ -32,7 +32,7 @@ class Environment[T](private val top_loc:Int = 0,
     return new Environment[T](top_loc = this.top_loc+1,
       locations = this.locations+(Location(top_loc)-> value),
       global = this.global+(name -> Location(top_loc)) ,
-     procedures = this.procedures,
+      procedures = this.procedures,
       userDefinedTypes = this.userDefinedTypes,
       stack = this.stack
     )
@@ -60,7 +60,6 @@ class Environment[T](private val top_loc:Int = 0,
       userDefinedTypes = this.userDefinedTypes,
       stack = copyStack)
   }
-
 
   def setLocalVariable(name: String, value: T) : Environment[T] = {
 //    top_loc += 1
@@ -134,7 +133,7 @@ class Environment[T](private val top_loc:Int = 0,
     //Unit = procedures(procedure.name) = procedure
     val copyprocedures = procedures.clone() + (procedure.name -> procedure)
     //copyprocedures(procedure.name) = procedure
-
+    
     new Environment[T](top_loc = this.top_loc,
         locations = this.locations,
         global = this.global,
@@ -143,7 +142,17 @@ class Environment[T](private val top_loc:Int = 0,
         stack = this.stack)
   }
 
-  def findProcedure(name: String): Procedure = procedures(name)
+  def findProcedure(name: String): LambdaProcedure = {
+    val procedure = locations(global(name)).asInstanceOf[LambdaProcedure]
+
+    return new LambdaProcedure(
+        args = procedure.args,
+        returnType = procedure.returnType,
+        constants = procedure.constants,
+        variables = procedure.variables,
+        stmt = procedure.stmt
+    )
+  }
 
   def push(): Environment[T] ={
     var copystack = stack.clone()

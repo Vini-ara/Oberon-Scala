@@ -32,6 +32,7 @@ case class OberonModule(
 // SequenceStatement(List[Stmt]) extends Stmt
 // alternativa: SequenceStatement(stmt, stmt) extends Stmt
 
+
 /* procedure declaration definition */
 case class Procedure(
     name: String,
@@ -199,6 +200,15 @@ case class ModExpression(left: Expression, right: Expression) extends Expression
 case class NotExpression(exp: Expression) extends Expression
 case class LambdaExpression(args: List[FormalArg], exp: Expression)
     extends Expression
+
+/* Lambda declaration definition */
+case class LambdaProcedure (
+    args: List[FormalArg],
+    returnType: Option[Type],
+    constants: List[Constant],
+    variables: List[VariableDeclaration],
+    stmt: Statement
+) extends Expression {} 
 
 /* Statements */
 trait Statement {
