@@ -35,7 +35,15 @@ class Interpreter {
     var temp = environment
     val lib = new StandardLibrary[Expression]()
     for(p <- lib.stdlib.procedures) {
-      temp = temp.declareProcedure(p)
+      temp = temp.setGlobalVariable(
+      p.name, 
+      new LambdaProcedure(
+        args = p.args, 
+        returnType = p.returnType, 
+        constants = p.constants, 
+        variables = p.variables, 
+        stmt = p.stmt
+      ))
     }
     temp
   }
