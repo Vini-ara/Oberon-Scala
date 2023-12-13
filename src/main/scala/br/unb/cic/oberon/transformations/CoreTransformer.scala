@@ -9,6 +9,9 @@ import br.unb.cic.oberon.ir.ast.Procedure
 import java.util.concurrent.atomic.AtomicInteger
 import scala.collection.mutable._
 
+import shapeless._
+import poly._
+
 object CoreTransformer {
 
   def reduceToCoreStatement(
@@ -244,6 +247,25 @@ object CoreTransformer {
         throw new IllegalArgumentException("elsifStmts cannot be empty.")
     }
 
+  private def reduceLambdaToProcedure(module: OberonModule): OberonModule = {
+     object transformLambdaToProcedure extends ->((lambda: LambdaExpression) => {
+     Procedure(
+        name = "lambda",
+        args = lambda.args,
+        returnType = None,
+        constants = List(),
+        variables = List(),
+        stmt = ReturnStmt(lambda.exp)
+       )
+     })
+
+     val gen = Generic[OberonModule]
+
+     val replaced = everywhere(transformLambdaToProcedure)(gen.to(module))
+
+     return gen.from(replaced) 
+  }
+
   private def reduceProcedureDeclaration(
       procedure: Procedure,
       caseIdGenerator: AtomicInteger,
@@ -276,7 +298,7 @@ object CoreTransformer {
     val stmtcore =
       reduceToCoreStatement(module.stmt.get, caseIdGenerator, addedVariables)
 
-    OberonModule(
+    val newModule = OberonModule(
       name = module.name,
       submodules = module.submodules,
       userTypes = module.userTypes,
@@ -287,6 +309,8 @@ object CoreTransformer {
       ),
       stmt = Some(stmtcore)
     )
+
+    return reduceLambdaToProcedure(newModule)
   }
 }
 
