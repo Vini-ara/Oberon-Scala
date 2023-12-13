@@ -9,8 +9,6 @@ import br.unb.cic.oberon.ir.ast.Procedure
 import java.util.concurrent.atomic.AtomicInteger
 import scala.collection.mutable._
 
-import shapeless._
-import poly._
 
 object CoreTransformer {
 
@@ -270,25 +268,6 @@ object CoreTransformer {
         stmt =
           reduceToCoreStatement(procedure.stmt, caseIdGenerator, addedVariables)
       )
-    }
-
-    private def reduceLambdaToProcedure(module: OberonModule): OberonModule = {
-       object transformLambdaToProcedure extends ->((lambda: LambdaExpression) => {
-       Procedure(
-          name = "lambda",
-          args = lambda.args,
-          returnType = None,
-          constants = List(),
-          variables = List(),
-          stmt = ReturnStmt(lambda.exp)
-         )
-       })
-
-       val gen = Generic[OberonModule]
-
-       val replaced = everywhere(transformLambdaToProcedure)(gen.to(module))
-
-       return gen.from(replaced) 
     }
 
     private def transformTestListStatement(listTest: List[Test], caseIdGenerator: AtomicInteger,

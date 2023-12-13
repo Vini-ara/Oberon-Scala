@@ -210,9 +210,7 @@ case class Procedure(
     constants: List[Constant],
     variables: List[VariableDeclaration],
     stmt: Statement
-) extends Expression {
-  def accept(v: OberonVisitor): v.T = v.visit(this)
-}
+) extends Expression {}
 
 /* Statements */
 trait Statement {

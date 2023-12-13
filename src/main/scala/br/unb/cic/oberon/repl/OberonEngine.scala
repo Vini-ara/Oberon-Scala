@@ -13,6 +13,7 @@ import org.jline.reader.Candidate
 import org.jline.reader.LineReader
 import org.jline.reader.ParsedLine
 import org.jline.utils.AttributedString
+import br.unb.cic.oberon.ir.ast._
 
 import java.lang
 import java.io.File
@@ -22,6 +23,9 @@ import java.util.Collections
 import scala.io.Source
 import scala.jdk.CollectionConverters._
 import scala.util.matching.Regex
+
+import shapeless._
+import poly._
 
 class OberonEngine extends ScriptEngine {
   object Format extends Enumeration {
@@ -178,8 +182,30 @@ class OberonEngine extends ScriptEngine {
     )
     val coreModule = CoreTransformer.reduceOberonModule(module)
 
-    env =  interpreter.runInterpreter(coreModule)
+    val newCoreModule = reduceLambdaToProcedure(coreModule)
+
+    env =  interpreter.runInterpreter(newCoreModule)
     null
+  }
+
+
+  private def reduceLambdaToProcedure(module: OberonModule): OberonModule = {
+     object transformLambdaToProcedure extends ->((lambda: LambdaExpression) => {
+     Procedure(
+        name = "lambda",
+        args = lambda.args,
+        returnType = None,
+        constants = List(),
+        variables = List(),
+        stmt = ReturnStmt(lambda.exp)
+       )
+     })
+
+     val gen = Generic[OberonModule]
+
+     val replaced = everywhere(transformLambdaToProcedure)(gen.to(module))
+
+     return gen.from(replaced) 
   }
 
   /*
